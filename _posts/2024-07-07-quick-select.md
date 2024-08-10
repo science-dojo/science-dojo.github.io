@@ -1,11 +1,16 @@
 ---
 title: Quick-select k-th smallest elements in lists
-tags: Divide-and-Conquer Sort Leetcode
+tags:
+  - Divide-and-Conquer
+  - Sort
+  - Leetcode
+toc: true
+toc_label: "Getting Started"
 ---
 
 快速选择算法基于两种partition算法实现，在两种不同的partition算法会产生完全不同的算法实现， 深入了解不同的划分方式差异，对算法理解和实现有重要作用。
 
-# 两类划分算法
+## 两类划分算法
 
 - [Lomuto partition scheme](https://en.wikipedia.org/wiki/Quickselect)
 - [Hoare partition scheme](https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme)
@@ -58,7 +63,7 @@ int quickSelect(vector<int>& a, int l, int r, int index){
 }
 ```
 
-# Hoare Partition Scheme
+## Hoare Partition Scheme
 
 Hoare's scheme 比 Lomuto's partition scheme 更高效:
 
@@ -89,4 +94,3 @@ int quickSelect(vector<int>& a, int l, int r, int k){
 ```
 
 [leecode problems - 215](https://leetcode.cn/problems/kth-largest-element-in-an-array/description/?envType=study-plan-v2&envId=top-interview-150)
-
