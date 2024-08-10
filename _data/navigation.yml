@@ -6,5 +6,7 @@ main:
     url: /tags/
   - title: "Categories"
     url: /categories/
-  - title: "Collections"
-    url: /collection-archive/
+  - title: "About"
+    url: /about/
+  # - title: "Collections"
+  #   url: /collection-archive/
