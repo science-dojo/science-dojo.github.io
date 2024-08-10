@@ -1,11 +1,11 @@
 # main links
 main:
-  - title: "Home"
-    url: /home/
   - title: "Sample Posts"
     url: /year-archive/
   - title: "Sample Tags"
     url: /tag-archive/
+  - title: "Sample Categories"
+    url: /category-archive/
   # - title: "Sample Collections"
   #   url: /collection-archive/
   # - title: "About"
