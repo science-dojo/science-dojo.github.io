@@ -5,7 +5,7 @@ tags:
   - Quick Sort Algorithm
 categories:
   - Algorithm
-layout: splash
+layout: posts
 toc: true
 toc_label: "开始"
 ---
