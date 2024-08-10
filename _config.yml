@@ -68,11 +68,11 @@ reCaptcha:
 atom_feed:
   path: # blank (default) uses feed.xml
   hide: # true, false (default)
-search: # true, false (default)
+search: true # false (default)
 search_full_content: # true, false (default)
 search_provider: # lunr (default), algolia, google
 lunr:
-  search_within_pages: # true, false (default)
+  search_within_pages: true # true, false (default)
 algolia:
   application_id: # YOUR_APPLICATION_ID
   index_name: # YOUR_INDEX_NAME
@@ -112,10 +112,10 @@ analytics:
 
 # Site Author
 author:
-  name: "Your Name"
+  name: "AMiner"
   avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio: "I am an **amazing** person."
-  location: "Somewhere"
+  bio: "不积硅步，无以至千里"
+  location: "China"
   email:
   links:
     - label: "Email"
@@ -324,7 +324,7 @@ defaults:
       type: posts
     values:
       layout: single
-      author_profile: true
+      author_profile: false
       read_time: true
       comments: # true
       share: true
@@ -344,7 +344,7 @@ defaults:
       type: recipes
     values:
       layout: single
-      author_profile: true
+      author_profile: false
       share: true
       comments: true
   # _pets
@@ -353,7 +353,7 @@ defaults:
       type: pets
     values:
       layout: single
-      author_profile: true
+      author_profile: false
       share: true
       comment: true
   # _pages
