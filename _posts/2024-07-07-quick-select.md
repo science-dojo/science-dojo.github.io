@@ -2,10 +2,11 @@
 title: Quick-select k-th smallest elements in lists
 tags:
   - Divide-and-Conquer
-  - Sort
-  - Leetcode
+  - Quick Sort Algorithm
+categories:
+  - Algorithm
 toc: true
-toc_label: "Getting Started"
+toc_label: "开始"
 ---
 
 快速选择算法基于两种partition算法实现，在两种不同的partition算法会产生完全不同的算法实现， 深入了解不同的划分方式差异，对算法理解和实现有重要作用。
