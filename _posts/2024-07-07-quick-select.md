@@ -5,6 +5,8 @@ tags: Divide-and-Conquer Sort Leetcode
 
 快速选择算法基于两种partition算法实现，在两种不同的partition算法会产生完全不同的算法实现， 深入了解不同的划分方式差异，对算法理解和实现有重要作用。
 
+# 两类划分算法
+
 - [Lomuto partition scheme](https://en.wikipedia.org/wiki/Quickselect)
 - [Hoare partition scheme](https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme)
 
@@ -12,7 +14,7 @@ tags: Divide-and-Conquer Sort Leetcode
 partition算法将**小于等于**pivot的元素放第k个元素左边，**大于**pivot的元素放在第k个位置右边，
 因此第k小的元素就是pivot自己。
 
-Lomuto partition implementation:
+# Lomuto Partition Scheme:
 
 ```c++
 // implementation of <Introduction of algorithm> (从小到大排序)
@@ -55,6 +57,8 @@ int quickSelect(vector<int>& a, int l, int r, int index){
     }
 }
 ```
+
+# Hoare Partition Scheme
 
 Hoare's scheme 比 Lomuto's partition scheme 更高效:
 
