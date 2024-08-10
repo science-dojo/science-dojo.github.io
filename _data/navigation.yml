@@ -8,9 +8,8 @@ main:
     url: /category-archive/
   - title: "Splash Page"
     url: /splash-page/
-  # - title: "Sample Collections"
-  #   url: /collection-archive/
+  - title: "Sample Collections"
+    url: /collection-archive/
   # - title: "About"
   #   url: /About/
   #
-
