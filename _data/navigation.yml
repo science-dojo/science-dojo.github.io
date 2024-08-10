@@ -5,8 +5,8 @@ main:
   - title: "Tags"
     url: /tags/
   - title: "Categories"
-    url: /Categories/
-  - title: "Sample Collections"
+    url: /categories/
+  - title: "Collections"
     url: /collection-archive/
   # - title: "About"
   #   url: /About/
