@@ -21,7 +21,7 @@ toc_label: "开始"
 partition算法将**小于等于**pivot的元素放第k个元素左边，**大于**pivot的元素放在第k个位置右边，
 因此第k小的元素就是pivot自己。
 
-# Lomuto Partition Scheme:
+## Lomuto Partition Scheme:
 
 ```c++
 // implementation of <Introduction of algorithm> (从小到大排序)
