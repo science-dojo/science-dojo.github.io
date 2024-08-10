@@ -1,13 +1,11 @@
 # main links
 main:
-  - title: "Sample Posts"
+  - title: "Posts"
     url: /year-archive/
-  - title: "Sample Tags"
-    url: /tag-archive/
-  - title: "Sample Categories"
-    url: /category-archive/
-  - title: "Splash Page"
-    url: /splash-page/
+  - title: "Tags"
+    url: /tags/
+  - title: "Categories"
+    url: /Categories/
   - title: "Sample Collections"
     url: /collection-archive/
   # - title: "About"
