@@ -116,14 +116,14 @@ analytics:
 # Site Author
 author:
   name: "Shi-Feng Ren"
-  avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  avatar: /assets/images/sf_ren.jpg # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio: "Machine learning engineer in love with exploring and exploiting neural computing theory, and building digital products."
   location: "Peking"
   email:
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      url: "shifeng.ren.hit@gmail.com"
+      # url: "shifeng.ren.hit@gmail.com"
     - label: "Website"
       icon: "fas fa-fw fa-link"
       # url: "https://your-website.com"
