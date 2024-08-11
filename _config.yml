@@ -17,11 +17,11 @@ minimal_mistakes_skin: "default" # "air", "aqua", "contrast", "dark", "dirt", "n
 # Site Settings
 locale: "zh-CN"
 rtl: # true, false (default) # turns direction of the page into right to left for RTL languages
-title: "科学道场"
+title: "science dojo"
 title_separator: "-"
 subtitle: "" # site tagline that appears below site title in masthead
 name: "AMiner"
-description: "不积硅步，无以至千里"
+description: "A journey of a thousand miles may not be achieved without accumulation of each single step, just as the enormous ocean may not be formed without gathering every brook or stream."
 url: "https://shifengren.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl: "" # the subpath of your site, e.g. "/blog"
 repository: "shifengren/shifengren.github.io/" # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
