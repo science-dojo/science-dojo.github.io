@@ -21,7 +21,9 @@ title: "science dojo"
 title_separator: "-"
 subtitle: "" # site tagline that appears below site title in masthead
 name: "AMiner"
+
 description: "A journey of a thousand miles may not be achieved without accumulation of each single step, just as the enormous ocean may not be formed without gathering every brook or stream."
+
 url: "https://shifengren.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl: "" # the subpath of your site, e.g. "/blog"
 repository: "shifengren/shifengren.github.io/" # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
