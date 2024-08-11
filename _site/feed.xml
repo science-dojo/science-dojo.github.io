@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.10.0">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-11T15:18:11+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">科学道场</title><subtitle>不积硅步，无以至千里</subtitle><author><name>AMiner</name></author><entry><title type="html">Quick-select k-th smallest elements in lists</title><link href="http://localhost:4000/algorithm/quick-select/" rel="alternate" type="text/html" title="Quick-select k-th smallest elements in lists" /><published>2024-07-07T00:00:00+08:00</published><updated>2024-07-07T00:00:00+08:00</updated><id>http://localhost:4000/algorithm/quick-select</id><content type="html" xml:base="http://localhost:4000/algorithm/quick-select/"><![CDATA[<p>快速选择算法基于两种partition算法实现，在两种不同的partition算法会产生完全不同的算法实现， 深入了解不同的划分方式差异，对算法理解和实现有重要作用。</p>
+
+<h2 id="两类划分算法">两类划分算法</h2>
+
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Quickselect">Lomuto partition scheme</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme">Hoare partition scheme</a></li>
+</ul>
+
+<p>与 Hoare partition 不同的是 <strong>Lomutopartition算法返回pivot的下标k</strong>，
+partition算法将<strong>小于等于</strong>pivot的元素放第k个元素左边，<strong>大于</strong>pivot的元素放在第k个位置右边，
+因此第k小的元素就是pivot自己。</p>
+
+<h2 id="lomuto-partition-scheme">Lomuto Partition Scheme:</h2>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// implementation of &lt;Introduction of algorithm&gt; (从小到大排序)</span>
+<span class="kt">int</span> <span class="nf">partition</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">r</span><span class="p">],</span> <span class="n">i</span> <span class="o">=</span> <span class="n">l</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">l</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">;</span> <span class="o">++</span><span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">swap</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="o">++</span><span class="n">i</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">swap</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="o">++</span><span class="n">i</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">r</span><span class="p">]);</span>
+    <span class="k">return</span> <span class="n">i</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// implementation of yanweimin &lt;data structure&gt; (从大到小排序)</span>
+<span class="kt">int</span> <span class="n">partition2</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">pt</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">i</span> <span class="o">=</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">r</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">t</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">l</span><span class="p">];</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">while</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">pt</span><span class="p">)</span> <span class="o">--</span><span class="n">j</span><span class="p">;</span>
+      <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+      <span class="k">while</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span> <span class="o">&amp;&amp;</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">pt</span><span class="p">)</span> <span class="o">++</span><span class="n">i</span><span class="p">;</span>
+      <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+  <span class="p">}</span>
+  <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">i</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="n">randomPartition</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">rand</span><span class="p">()</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">l</span><span class="p">;</span>
+    <span class="n">swap</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="n">r</span><span class="p">]);</span>
+    <span class="k">return</span> <span class="n">partition</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// 第k小的元素</span>
+<span class="kt">int</span> <span class="n">quickSelect</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">){</span>
+    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">int</span> <span class="n">q</span> <span class="o">=</span> <span class="n">randomPartition</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">q</span> <span class="o">==</span> <span class="n">index</span><span class="p">)</span> <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="n">q</span><span class="p">];</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">q</span> <span class="o">&lt;</span> <span class="n">index</span><span class="p">)</span> <span class="n">l</span> <span class="o">=</span> <span class="n">q</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="k">else</span> <span class="n">r</span> <span class="o">=</span> <span class="n">q</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="hoare-partition-scheme">Hoare Partition Scheme</h2>
+
+<p>Hoare’s scheme 比 Lomuto’s partition scheme 更高效:</p>
+
+<ul>
+  <li>平均降低三倍swap次数</li>
+  <li>即使当list中的所有值都相等的时候，Hoare partition方式能产生均衡的划分</li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">partition</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">nums</span><span class="p">,</span> <span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">){</span>
+  <span class="kt">int</span> <span class="n">partition</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">i</span> <span class="o">=</span> <span class="n">l</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">do</span> <span class="n">i</span><span class="o">++</span><span class="p">;</span> <span class="k">while</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">partition</span><span class="p">);</span>
+      <span class="k">do</span> <span class="n">j</span><span class="o">--</span><span class="p">;</span> <span class="k">while</span> <span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">partition</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">)</span>
+          <span class="n">swap</span><span class="p">(</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">nums</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+  <span class="p">}</span>
+  <span class="c1">// 循环结束时, j+1 == i, [l, j]之间的数**小于等于**pivot, [i,r]之间的数**大于等于**pivot</span>
+  <span class="k">return</span> <span class="n">j</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// 第k小的元素</span>
+<span class="kt">int</span> <span class="n">quickSelect</span><span class="p">(</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;&amp;</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">l</span><span class="p">,</span> <span class="kt">int</span> <span class="n">r</span><span class="p">,</span> <span class="kt">int</span> <span class="n">k</span><span class="p">){</span>
+    <span class="c1">// 因为partition算法返回的不是pivot的index，因此需要遍历完数组，当只剩下一个元素时，就是第k小的元素</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="o">==</span><span class="n">r</span><span class="p">)</span> <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="n">k</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">q</span> <span class="o">=</span> <span class="n">partition</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">k</span> <span class="o">&lt;=</span> <span class="n">j</span><span class="p">)</span> <span class="n">quickSelect</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">);</span>
+    <span class="k">else</span> <span class="n">quickSelect</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">k</span><span class="p">);</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p><a href="https://leetcode.cn/problems/kth-largest-element-in-an-array/description/?envType=study-plan-v2&amp;envId=top-interview-150">leecode problems - 215</a></p>]]></content><author><name>AMiner</name></author><category term="Algorithm" /><category term="Divide-and-Conquer" /><category term="Quick Sort Algorithm" /><summary type="html"><![CDATA[快速选择算法基于两种partition算法实现，在两种不同的partition算法会产生完全不同的算法实现， 深入了解不同的划分方式差异，对算法理解和实现有重要作用。]]></summary></entry></feed>
