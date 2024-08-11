@@ -1,7 +1,6 @@
 ---
 title: Quick-select k-th smallest elements in lists
 tags:
-  - Divide-and-Conquer
   - Quick Sort Algorithm
 categories:
   - Algorithm
