@@ -4,8 +4,7 @@ tags:
   - Markdown
   - Latex
 categories:
-  - Markdown
-  - Latex
+  - Tutorial
 layout: single
 ---
 
