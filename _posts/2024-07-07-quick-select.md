@@ -96,3 +96,6 @@ int quickSelect(vector<int>& a, int l, int r, int k){
 ```
 
 [leecode problems - 215](https://leetcode.cn/problems/kth-largest-element-in-an-array/description/?envType=study-plan-v2&envId=top-interview-150)
+
+$$ E = mc^2 $$
+
