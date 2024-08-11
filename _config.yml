@@ -22,7 +22,8 @@ title_separator: "-"
 subtitle: "" # site tagline that appears below site title in masthead
 name: "AMiner"
 
-description: "A journey of a thousand miles may not be achieved without accumulation of each single step, just as the enormous ocean may not be formed without gathering every brook or stream."
+# description: "A journey of a thousand miles may not be achieved without accumulation of each single step, just as the enormous ocean may not be formed without gathering every brook or stream."
+description: "focus on artificial inteligence, deep learning theory and large language model, and share my pratice experience and summary"
 
 url: "https://shifengren.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl: "" # the subpath of your site, e.g. "/blog"
@@ -114,15 +115,15 @@ analytics:
 
 # Site Author
 author:
-  name: "AMiner"
+  name: "Shi-Feng Ren"
   avatar: # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio: "不积硅步，无以至千里"
-  location: "China"
+  bio: "Machine learning engineer in love with exploring and exploiting neural computing theory, and building digital products."
+  location: "Peking"
   email:
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
-      # url: "mailto:your.name@email.com"
+      url: "shifeng.ren.hit@gmail.com"
     - label: "Website"
       icon: "fas fa-fw fa-link"
       # url: "https://your-website.com"
