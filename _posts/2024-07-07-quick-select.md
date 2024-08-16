@@ -25,8 +25,9 @@ partition算法将**小于等于**pivot的元素放第k个元素左边，**大�
 - pivot选择：算法导论中选择最右边，严蔚敏教材中实现选择最左边。
 - 机制：双指针，指针`i`指向元素小于`pivot`的位置，指针`j`指向小于等于`pivot`的位置；`i`自增加1，交换`i`和`j`指向的元素。交换完毕后，`i`指向的元素小于`pivot`, `j`自增加1，查看一个位置和`pivot`的大小。当`j`指向最后一个元素时（满足小于等于`pivot`）必然交换`++i` 和 `j`指向的元素。
 - 返回位置：返回`i`，指向pivot在排序后的真实位置。
-- 性能：比Hoare慢，因为由更多的swap操作，特别当由很多重复元素时，最坏实际复杂度 $$O(n)$$
+- 性能：比Hoare慢，因为由更多的swap操作，特别当由很多重复元素时，最坏实际复杂度 $$O(n)$$。
 - 稳定性：半稳定，不改变**相等元素**的相对位置。
+
 ```c++
 // implementation of <Introduction of algorithm> (从小到大排序)
 int partition(vector<int>& a, int l, int r) {
@@ -69,6 +70,7 @@ int quickSelect(vector<int>& a, int l, int r, int index){
 }
 ```
 
+
 ## Hoare Partition Scheme
 
 Hoare's scheme 比 Lomuto's partition scheme 更高效:
@@ -78,6 +80,7 @@ Hoare's scheme 比 Lomuto's partition scheme 更高效:
 - 返回位置: 返回的位置不能保证是pivot在排序后的最终位置。
 - 性能：平均降低三倍swap次数，即使当list中的所有值都相等的时候，Hoare partition方式能产生均衡的划分
 - 稳定性：不稳定，可能改变相同元素的相对顺序。
+
 
 ```c++
 int partition(vector<int> &nums, int l, int r){
