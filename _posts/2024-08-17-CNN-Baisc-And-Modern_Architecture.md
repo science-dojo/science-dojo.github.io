@@ -248,6 +248,313 @@ def pool2d(X, pool_size, mode='max'):
 - 池化层：Average Pool (LeNet) -> Maximum Pool (Alexnet)
 - 模型容量：AlexNet 模型层数更多，并采用Dropout技术控制模型负载度；LeNet则仅仅使用权重衰减。
 
+## VGG
+
+CNN的基础构建块通常包含3步：
+1. 卷积层，同时增加Pad保持分辨率
+2. 非线性层，e.g. ReLU
+3. 池化层，降低分辨率，e.g. MaxPool 
+
+按照这种方式构建，一个224 x 224的输入图片，CNN不会拥有超过8个卷积层($log_2d$)。
+
+VGG的解决思路：在两个下采样之间，连续使用多个卷积、非线性变换。VGG将其实现为一个VGG Block，堆叠多个VGG Block变构成了VGG Net。
+
+其结果会导致网络加深，因此卷积核不宜使用太大的，以避免参数占用过大。用连续两个3x3卷积看到的像素区域和一个5x5卷积看到的一致，
+但参数量只需要$2 \times 3^2 \times c^2$， 远少于 $25 \times c^2$。 后续研究表明，**更深、更窄**的模型效果远好于同等参数量的浅层模型。
+此后，模型朝着更深的方向发展，3x3的卷积成为深度网络的标配置。 最近的研究中，[ParNet](https://openreview.net/forum?id=Xg47v73CDaj)表明
+通过使用大量的并行计算模块，使用更浅的网络能够达到深层网路同样的效果，未来可能会对网络设计有重要的影响。
+
+
+![vgg](/assets/images/deep_learning/conv_vgg.png){: .align-center}
+
+```python
+# VGG Block
+def vgg_block(num_convs, out_channels):
+    layers = []
+    for _ in range(num_convs): # number of convs
+        layers.append(nn.LazyConv2d(out_channels, kernel_size=3, padding=1))
+        layers.append(nn.ReLU())
+    layers.append(nn.MaxPool2d(kernel_size=2,stride=2))
+    return nn.Sequential(*layers)
+
+# VGG net
+class VGG(d2l.Classifier):
+    def __init__(self, arch, lr=0.1, num_classes=10):
+        super().__init__()
+        self.save_hyperparameters()
+        conv_blks = []
+        for (num_convs, out_channels) in arch:
+            conv_blks.append(vgg_block(num_convs, out_channels))
+        self.net = nn.Sequential(
+            *conv_blks, nn.Flatten(),
+            nn.LazyLinear(4096), nn.ReLU(), nn.Dropout(0.5),
+            nn.LazyLinear(4096), nn.ReLU(), nn.Dropout(0.5),
+            nn.LazyLinear(num_classes))
+        self.net.apply(d2l.init_cnn)
+```
+
+
+## NiN (Network in Network)
+
+
+LetNet, AlexNet, VGG有相同的设计模式：先利用一串卷积和池化层抽取空间结构特征，后接全连接网络和具体的任务。这种设计存在两个挑战：
+1. 网络最后的全连接层参数量很大，内存占用高，无法用于小型设备
+2. 在网络前面增加全连接以增加非线性，不仅破坏图像的空间结构也会占用的内存
+
+NiN的解决思路：
+1. 使用1x1卷积在通道之间增加局部的非线性（对每个像素在通道之间做全连接）
+2. 在网络最后的表示层中，使用**全局平均池化**层聚合不同位置的信息。
+
+**Notice**: 如果没有通道之间的局部非线性，全局平均池化将不会有效。
+{: .notice}
+
+
+![nin](/assets/images/deep_learning/conv_NiN.png){:. align-center}
+
+
+NiN同VGG有两个重要的区别：
+1. 网络最后的表示层仅使用全局平均池化层，整个网络都避免使用全连接层。
+2. NiN Block有两个连续的1x1卷积。相比一个，连续两个1x1卷积，能够提高非线性能力，提取到更有表达力的特征，计算量也会相应增加。
+3. 网络最后的NiN块的输出通道数量和分类数量一致，产生和分类数量一致的logit向量，用于分类
+
+NiN网络让研究者震惊的一点是：使用全局平均池化，并没有对精度有损。这是因为在低分辨率表示（有很多通道的表示）上做平均，相当于增加了一定量的*平移不变性*
+
+
+
+
+```python
+# NiN Block
+def nin_block(out_channels, kernel_size, strides, padding):
+    return nn.Sequential(
+        nn.LazyConv2d(out_channels, kernel_size, strides, padding), nn.ReLU(),
+        #Notice! two consective 1x1 conv
+        nn.LazyConv2d(out_channels, kernel_size=1), nn.ReLU(),
+        nn.LazyConv2d(out_channels, kernel_size=1), nn.ReLU())
+
+class NiN(d2l.Classifier):
+    def __init__(self, lr=0.1, num_classes=10):
+        super().__init__()
+        self.save_hyperparameters()
+        self.net = nn.Sequential(
+            nin_block(96, kernel_size=11, strides=4, padding=0),
+            nn.MaxPool2d(3, stride=2),
+            nin_block(256, kernel_size=5, strides=1, padding=2),
+            nn.MaxPool2d(3, stride=2),
+            nin_block(384, kernel_size=3, strides=1, padding=1),
+            nn.MaxPool2d(3, stride=2),
+            nn.Dropout(0.5),
+            nin_block(num_classes, kernel_size=3, strides=1, padding=1),
+            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.Flatten())
+        self.net.apply(d2l.init_cnn)
+
+```
+
+
+## GoogLeNet: Multi-branch Network
+
+GoogLeNet继承了 NiN、重复的BLock、多种卷积核混合的优点，显示对网络中各层的作用进行划分：
+1. stem（数据消化)，主要是网络前2～3层的卷积，抽取图像的底阶表示
+2. body (数据处理)，卷积块
+3. head (预测)，输出用于下游任务的表示
+
+GoogLeNet将多个卷积核并行连接，最后Concat起来，一定程度上解决了如何选取卷积核的问题。这就是该网络的基础构建块 **Inception Block**
+
+
+![inception](/assets/images/deep_learning/conv_inception.png){: .align-center}
+
+- 不同大小的卷积核用于抽取不同空间大小的特征
+- 1x1卷积用于缩小通道数量
+- MaxPool->1x1 conv，先池化后降低通道数量
+- 四个分支的输出在通道维度上Concat起来
+
+一个块中包含了不同大小的卷积核和池化层，用户通常需要调整的参数就是输出的通道数量，简化了卷积核选取问题。
+
+
+```python
+class Inception(nn.Module):
+    # c1--c4 are the number of output channels for each branch
+    def __init__(self, c1, c2, c3, c4, **kwargs):
+        super(Inception, self).__init__(**kwargs)
+        # Branch 1
+        self.b1_1 = nn.LazyConv2d(c1, kernel_size=1)
+        # Branch 2
+        self.b2_1 = nn.LazyConv2d(c2[0], kernel_size=1)
+        self.b2_2 = nn.LazyConv2d(c2[1], kernel_size=3, padding=1)
+        # Branch 3
+        self.b3_1 = nn.LazyConv2d(c3[0], kernel_size=1)
+        self.b3_2 = nn.LazyConv2d(c3[1], kernel_size=5, padding=2)
+        # Branch 4
+        self.b4_1 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        self.b4_2 = nn.LazyConv2d(c4, kernel_size=1)
+
+    def forward(self, x):
+        b1 = F.relu(self.b1_1(x))
+        b2 = F.relu(self.b2_2(F.relu(self.b2_1(x))))
+        b3 = F.relu(self.b3_2(F.relu(self.b3_1(x))))
+        b4 = F.relu(self.b4_2(self.b4_1(x)))
+        return torch.cat((b1, b2, b3, b4), dim=1)
+```
+
+
+![googlenet](/assets/images/deep_learning/conv_google_net.png){: .align-center}
+
+
+```python
+class GoogleNet(d2l.Classifier):
+    def b1(self):
+        return nn.Sequential(
+            nn.LazyConv2d(64, kernel_size=7, stride=2, padding=3),
+            nn.ReLU(), nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+    def b2(self):
+        return nn.Sequential(
+          nn.LazyConv2d(64, kernel_size=1), nn.ReLU(),
+          nn.LazyConv2d(192, kernel_size=3, padding=1), nn.ReLU(),
+          nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+    def b3(self):
+        return nn.Sequential(Inception(64, (96, 128), (16, 32), 32),
+                         Inception(128, (128, 192), (32, 96), 64),
+                         nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+    def b4(self):
+        return nn.Sequential(Inception(192, (96, 208), (16, 48), 64),
+                         Inception(160, (112, 224), (24, 64), 64),
+                         Inception(128, (128, 256), (24, 64), 64),
+                         Inception(112, (144, 288), (32, 64), 64),
+                         Inception(256, (160, 320), (32, 128), 128),
+                         nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+    def b5(self):
+        return nn.Sequential(Inception(256, (160, 320), (32, 128), 128),
+                         Inception(384, (192, 384), (48, 128), 128),
+                         nn.AdaptiveAvgPool2d((1,1)), nn.Flatten())
+    def __init__(self, lr=0.1, num_classes=10):
+        super(GoogleNet, self).__init__()
+        self.save_hyperparameters()
+        self.net = nn.Sequential(self.b1(), self.b2(), self.b3(), self.b4(),
+                                self.b5(), nn.LazyLinear(num_classes))
+        self.net.apply(d2l.init_cnn)
+```
+
+
+## ResNet and ResNeXt
+
+问题：增加网络层是如何增加网络的复杂度和表达性质的，而不是在增加网络层后，网络表达能力下降？
+
+**如果我们能将新增加的layer训练成$f(x)=x$，新模型将会至少和原模型一样有效**，或许还能获得更好的效果。
+
+![resnet block](/assets/images/deep_learning/conv_resnet_block.png){: .align-center}
+
+右边虚线网络学习映射关系$g(x)=f(x)-x$，如果$f(x)=x$, $g(x)=0$，因此更容易学习，只需要让虚线网络的权重和偏置向0学习既可。
+
+
+值得注意的是：**残差连接在激活函数之前相加, BatchNorm在激活之前使用**；另外，为了方便改变输出的通道，增加1x1卷积改变输入的通道数量保持和输出一致。
+
+
+![resnet1](/assets/images/deep_learning/conv_resnet_block1.png){:.align-center}
+
+```python
+class Residual(nn.Module):  #@save
+    """The Residual block of ResNet models."""
+    def __init__(self, num_channels, use_1x1conv=False, strides=1):
+        super().__init__()
+        self.conv1 = nn.LazyConv2d(num_channels, kernel_size=3, padding=1,
+                                   stride=strides)
+        self.conv2 = nn.LazyConv2d(num_channels, kernel_size=3, padding=1)
+        if use_1x1conv:
+            self.conv3 = nn.LazyConv2d(num_channels, kernel_size=1,
+                                       stride=strides)
+        else:
+            self.conv3 = None
+        self.bn1 = nn.LazyBatchNorm2d()
+        self.bn2 = nn.LazyBatchNorm2d()
+
+    def forward(self, X):
+        Y = F.relu(self.bn1(self.conv1(X)))
+        Y = self.bn2(self.conv2(Y))
+        if self.conv3:
+            X = self.conv3(X)
+        Y += X
+        return F.relu(Y)
+
+
+
+class ResNet(d2l.Classifier):
+    def b1(self):
+        return nn.Sequential(
+            nn.LazyConv2d(64, kernel_size=7, stride=2, padding=3),
+            nn.LazyBatchNorm2d(), nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+    def block(self, num_residuals, num_channels, first_block=False):
+        blk = []
+        for i in range(num_residuals):
+            if i == 0 and not first_block:
+                blk.append(Residual(num_channels, use_1x1conv=True, strides=2)) 
+            else:
+                blk.append(Residual(num_channels))
+        return nn.Sequential(*blk)
+    def __init__(self, arch, lr=0.1, num_classes=10):
+        super(ResNet, self).__init__()
+        self.save_hyperparameters()
+        self.net = nn.Sequential(self.b1())
+        for i, b in enumerate(arch):
+            self.net.add_module(f'b{i+2}', self.block(*b, first_block=(i==0)))
+        self.net.add_module('last', nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten(),
+            # 注意，增加了FC层
+            nn.LazyLinear(num_classes)))
+        self.net.apply(d2l.init_cnn)
+```
+
+残差网络块设计一个痛点：需要在非线性和输出维度作出权衡：
+- 增加非线性，可以增加网络层数、增加卷积核大小。参数量无疑会增加，这种增加方式，没有留下参数优化的余地。
+- 增加通道数量，增加块之间携带的信息量。参数量增加正比于 $O(c_i \times c_o)$
+
+受`Inception block`启发，可以让残差块拥有多个相互独立的分支，不同于`Inception`每个分支都不相同，我们让残差的每个分支都相同，最后将分支的结果在通道维度concat起来。
+
+- 分组前, 1x1卷积需要参数量$c_i \times c_o$
+- 分组后，$g \ times \frac{c_i}{g} \times \frac{c_o}{g} = \frac{c_i \times c_o}{g}$
+
+分组后, 不同分组之间没有信息交互，`ResNeXt`通过将3x3的分组卷积放在两个1x1卷积之间解决，需要的参数量为 $c_i \times b + c_o \times b + \frac{b^2}{g} = b \times (c_i+c_o+\frac{b}{g})$，
+
+
+
+![res_next_block](/assets/images/deep_learning/conv_resnext_block.png){: .align-center}
+
+
+```python
+class ResNeXtBlock(nn.Module):  #@save
+    """The ResNeXt block."""
+    def __init__(self, num_channels, groups, bot_mul, use_1x1conv=False,
+                 strides=1):
+        super().__init__()
+        bot_channels = int(round(num_channels * bot_mul)) # b
+        self.conv1 = nn.LazyConv2d(bot_channels, kernel_size=1, stride=1) # 1x1, c_i x b
+        self.conv2 = nn.LazyConv2d(bot_channels, kernel_size=3,
+                                   stride=strides, padding=1,
+                                   groups=bot_channels//groups) # b*b / g
+        self.conv3 = nn.LazyConv2d(num_channels, kernel_size=1, stride=1) # 1x1, c_o x b
+        self.bn1 = nn.LazyBatchNorm2d()
+        self.bn2 = nn.LazyBatchNorm2d()
+        self.bn3 = nn.LazyBatchNorm2d()
+        if use_1x1conv:
+            self.conv4 = nn.LazyConv2d(num_channels, kernel_size=1,
+                                       stride=strides) # c_o x c_i
+            self.bn4 = nn.LazyBatchNorm2d()
+        else:
+            self.conv4 = None
+
+    def forward(self, X):
+        Y = F.relu(self.bn1(self.conv1(X)))
+        Y = F.relu(self.bn2(self.conv2(Y))) # group conv
+        Y = self.bn3(self.conv3(Y))
+        if self.conv4:
+            X = self.bn4(self.conv4(X))
+        return F.relu(Y + X)
+```
+
+
+
+
+
 # 参考
 
 - [Diving into Deep Learning](https://d2l.ai/chapter_convolutional-neural-networks/why-conv.html)
