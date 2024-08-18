@@ -1,5 +1,5 @@
 ---
-title: CNN Basics And Modern Architecture
+title: CNN Basics and Modern Architecture
 tags:
   - CNN
 layout: single
