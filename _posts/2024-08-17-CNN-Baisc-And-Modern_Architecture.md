@@ -511,7 +511,7 @@ class ResNet(d2l.Classifier):
 受`Inception block`启发，可以让残差块拥有多个相互独立的分支，不同于`Inception`每个分支都不相同，我们让残差的每个分支都相同，最后将分支的结果在通道维度concat起来。
 
 - 分组前, 1x1卷积需要参数量$c_i \times c_o$
-- 分组后，$g \ times \frac{c_i}{g} \times \frac{c_o}{g} = \frac{c_i \times c_o}{g}$
+- 分组后，$g \times \frac{c_i}{g} \times \frac{c_o}{g} = \frac{c_i \times c_o}{g}$
 
 分组后, 不同分组之间没有信息交互，`ResNeXt`通过将3x3的分组卷积放在两个1x1卷积之间解决，需要的参数量为 $c_i \times b + c_o \times b + \frac{b^2}{g} = b \times (c_i+c_o+\frac{b}{g})$，
 
