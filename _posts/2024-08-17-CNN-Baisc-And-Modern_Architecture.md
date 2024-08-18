@@ -4,6 +4,7 @@ tags:
   - CNN
 layout: single
 toc: true
+toc_sticky: true
 toc_label: "目录"
 ---
 
@@ -233,6 +234,19 @@ def pool2d(X, pool_size, mode='max'):
 池化层和卷积核一样，具有pad和stride参数，含义同卷积核一致。
 
 
+
+# 经典CNN网络结构
+
+## From LeNet to Alexnet
+
+
+![lenet_alexnet](/assets/images/deep_learning/conv_lenet_alexnet.png){: .align-center}
+
+
+- AlexNet 卷积核更大，这主要是ImageNet图片的宽和高是MNIST图片的8倍，最后的全连接层更大，也是因为ImageNet的分类数量更多
+- 激活函数：Sigmoid (LeNet) -> ReLU (Alexnet)
+- 池化层：Average Pool (LeNet) -> Maximum Pool (Alexnet)
+- 模型容量：AlexNet 模型层数更多，并采用Dropout技术控制模型负载度；LeNet则仅仅使用权重衰减。
 
 # 参考
 
