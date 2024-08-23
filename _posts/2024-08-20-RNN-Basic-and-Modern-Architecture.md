@@ -60,6 +60,18 @@ Markov model
 $\tau =1$时, *first-order Markov model*, $\tau =k$时, *$k^{th}-order Markov model$*
 
 $\tao$越大，效果越好；随着$\tao$逐渐增大，效果增益快速降低，计算量增大。实际使用时，根据计算资源，灵活选择取值。
+# Measure languate model
+
+ Entroy
+: 给定一个分布$P(x)$，其 entropy 定义为 $H[P] = \sum_{j}^{n}-P(j)logP(j)$
+  $-Log(P(j))$用于量化观测到事件$j$时的惊讶程度，或者传输信息需要的比特数，其被称为 **Information content**。概率为1时, 信息量为0，概率越低，信息量越大，因为当一个低概率的事件发生时，通常能传达重要的信息。
+
+Cross Entropy
+: 
+
+Perpexity
+:
+
 
 # Recurrent Neural Networks 
 
