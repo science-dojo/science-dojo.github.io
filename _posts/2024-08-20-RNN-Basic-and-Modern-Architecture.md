@@ -217,6 +217,35 @@ $$ O_t = H_t W_{hq} + b_q $$
 
 
 
+```python
+
+class RNNScratch(Module): 
+    """The RNN model implemented from scratch."""
+    def __init__(self, num_inputs, num_hiddens, sigma=0.01):
+        super().__init__()
+        self.W_xh = nn.Parameter(
+            torch.randn(num_inputs, num_hiddens) * sigma)
+        self.W_hh = nn.Parameter(
+            torch.randn(num_hiddens, num_hiddens) * sigma)
+        self.b_h = nn.Parameter(torch.zeros(num_hiddens))
+    def forward(self, inputs, state=None):
+        if state is None:
+            # Initial state with shape: (batch_size, num_hiddens)
+            state = torch.zeros((inputs.shape[1], self.num_hiddens),
+                              device=inputs.device)
+        else:
+            state, = state
+        outputs = []
+        for X in inputs:  # Shape of inputs: (num_steps, batch_size, num_inputs)
+            state = torch.tanh(torch.matmul(X, self.W_xh) +
+                            torch.matmul(state, self.W_hh) + self.b_h)
+            outputs.append(state)
+        return outputs, state
+```
+```
+```
+
+
 ## Grad clipping for prevent from exploding gradients
 
 
@@ -231,3 +260,216 @@ $$ O_t = H_t W_{hq} + b_q $$
 ## Backpropagation Through Time (BPTT)
 
 [Analysis of Gradients in RNN](https://d2l.ai/chapter_recurrent-neural-networks/bptt.html) explains more detail
+
+假设RNN模型如下：
+
+$$\begin{aligned}h_t &= f(x_t, h_{t-1}, w_\textrm{h}),\\o_t &= g(h_t, w_\textrm{o}),\end{aligned}$$
+
+
+$w_\textrm{h}$, $w_\textrm{o}$ 分别代表隐藏层和输出层的权重
+
+损失函数依赖T时间步中计算的损失和：
+
+$$L(x_1, \ldots, x_T, y_1, \ldots, y_T, w_\textrm{h}, w_\textrm{o}) = \frac{1}{T}\sum_{t=1}^T l(y_t, o_t).$$
+
+
+计算关于隐藏层的权重的梯度：
+
+$$\begin{aligned}\frac{\partial L}{\partial w_\textrm{h}}  & = \frac{1}{T}\sum_{t=1}^T \frac{\partial l(y_t, o_t)}{\partial w_\textrm{h}}  \\& = \frac{1}{T}\sum_{t=1}^T \frac{\partial l(y_t, o_t)}{\partial o_t} \frac{\partial g(h_t, w_\textrm{o})}{\partial h_t}  \frac{\partial h_t}{\partial w_\textrm{h}}.\end{aligned}$$
+
+
+因为 $\frac{\partial h_t}{\partial w_h}$ 同时依赖 $h_{t-1}, w_h$, 利用求导*链式法则*：
+
+$$\frac{\partial h_t}{\partial w_\textrm{h}}= \frac{\partial f(x_{t},h_{t-1},w_\textrm{h})}{\partial w_\textrm{h}} +\frac{\partial f(x_{t},h_{t-1},w_\textrm{h})}{\partial h_{t-1}} \frac{\partial h_{t-1}}{\partial w_\textrm{h}}.$$
+
+
+为了计算出递推式，我们做以下替换：
+
+
+$$\begin{aligned}a_t &= \frac{\partial h_t}{\partial w_\textrm{h}},\\
+b_t &= \frac{\partial f(x_{t},h_{t-1},w_\textrm{h})}{\partial w_\textrm{h}}, \\
+c_t &= \frac{\partial f(x_{t},h_{t-1},w_\textrm{h})}{\partial h_{t-1}},\end{aligned}$$
+
+t=0时，$a_0=0$, t>0时, $a_{t}=b_{t}+c_{t}a_{t-1}$, 因此容易计算出：
+
+$$a_{t}=b_{t}+\sum_{i=1}^{t-1}\left(\prod_{j=i+1}^{t}c_{j}\right)b_{i}.$$
+
+
+变量替换回后，得到：
+
+$$\frac{\partial h_t}{\partial w_\textrm{h}}=\frac{\partial f(x_{t},h_{t-1},w_\textrm{h})}{\partial w_\textrm{h}}+\sum_{i=1}^{t-1}\left(\prod_{j=i+1}^{t} \frac{\partial f(x_{j},h_{j-1},w_\textrm{h})}{\partial h_{j-1}} \right) \frac{\partial f(x_{i},h_{i-1},w_\textrm{h})}{\partial w_\textrm{h}}.$$
+
+
+当`t`取值很大时，计算量显然很大，其中的**梯度连乘操作时梯度爆炸和梯度消失现象发生的根本原因**。
+
+
+
+实际使用两种方法缓解梯度爆炸和梯度消失问题：
+
+Truncated BTPP (TBTPP)
+: 只计算前$\tau$步的梯度, 这是一种计算真实梯度的近似。实际效果很好。主要问题是会导致模型相比长期因素，更关注**短期因素的**影响，这会导致模型更偏向简单、稳定的方向发展，事实上，也是符合预期的。
+可以认为 TBTPP 一定程度上增加了正则化。
+
+Random Truncation [(Anticipated reweighted TBTPP)](https://arxiv.org/abs/1705.08209)
+: 通过精心设计变长的截取长度，提供无偏TBTPP计算，详细可见论文，实际使用不多。
+
+实际实现时，每个实际步产生的临时变量$h_t$及其梯度和换成下来用以加速计算。
+
+
+# Addressing grad vanish by LSTM
+
+最早、最成功解决梯度消失问题的技术，来自LSTM网络(Long short-term memory)。
+其核心是一个被称为**带门控的记忆单元**的结构。
+
+## Gated Memory Cell
+
+
+![lstm-cell](/assets/images/deep_learning/rnn_lstm_cell.png){: .aligned-center}
+
+每个记忆单元都有一个内部状态 $C$, 和三个乘性的门控：
+- 输入门: 控制如何影响内部状态$C$
+- 输出门：控制内部状态$C$如何影响隐状态输出
+- 遗忘门：控制内部状态$C$如何更新（遗忘或更新）
+
+因此和RNN最重要的不同就是遗忘门的设计，即如何公式隐状态的更新。
+
+计算输入门、输出门和遗忘门：
+
+$$
+\begin{aligned}
+\mathbf{I}_t &= \sigma(\mathbf{X}_t \mathbf{W}_{\textrm{xi}} + \mathbf{H}_{t-1} \mathbf{W}_{\textrm{hi}} + \mathbf{b}_\textrm{i}),\\
+\mathbf{F}_t &= \sigma(\mathbf{X}_t \mathbf{W}_{\textrm{xf}} + \mathbf{H}_{t-1} \mathbf{W}_{\textrm{hf}} + \mathbf{b}_\textrm{f}),\\
+\mathbf{O}_t &= \sigma(\mathbf{X}_t \mathbf{W}_{\textrm{xo}} + \mathbf{H}_{t-1} \mathbf{W}_{\textrm{ho}} + \mathbf{b}_\textrm{o}),
+\end{aligned}
+$$
+
+计算输入节点：控制输入X进入内部状态$C$的信息量
+
+$$\tilde{\mathbf{C}}_t = \textrm{tanh}(\mathbf{X}_t \mathbf{W}_{\textrm{xc}} + \mathbf{H}_{t-1} \mathbf{W}_{\textrm{hc}} + \mathbf{b}_\textrm{c}),$$
+
+
+更新内部状态$C$：
+
+$$\mathbf{C}_t = \mathbf{F}_t \odot \mathbf{C}_{t-1} + \mathbf{I}_t \odot \tilde{\mathbf{C}}_t.$$
+
+这种设计给模型一定的自由度，学习何时保持内部状态不变，何时需要更新内部状态，何时不用内部状态。
+实践中，**这种设计也一定程度缓解了梯度消失问题**，即使序列很长，也让模型更容易训练。
+
+计算隐状态:
+
+$$\mathbf{H}_t = \mathbf{O}_t \odot \tanh(\mathbf{C}_t).$$
+
+
+易见，计算输入节点和隐状态时，均使用`tanh`激活函数，保持隐状态的值域在(-1,1)之间。
+
+但是为什么选择使用 `tanh`作为隐状态和输入节点的激活函数，`sigmoid`作为门控的激活函数？
+[stackoverflow](https://stackoverflow.com/questions/40761185/what-is-the-intuition-of-using-tanh-in-lstm)、[stackexchange](https://ai.stackexchange.com/questions/32505/why-is-there-tanhxsigmoidx-in-a-lstm-cell)有一些有益的讨论。
+
+门控函数的作用是控制信息被使用的多少，例如不用或者完全使用，sigmoid的输出值域在0~1之间，符合门控函数的作用。
+
+输入状态和隐状态使用`tanh`激活，个人认为不宜被值域在0~1之间的激活函数替换的。因为输入节点对隐藏层的贡献，隐藏层对于下一层输入的贡献，可能是正的，也可能是负，要表达这种含义，需要让激活函数的值域在(-1,1)之间，来表达正负贡献的作用；对于某些具体的任务，输入节点和隐藏层对下一层的贡献可能都是正相关的，此时可以选择替换。
+
+
+```python
+class LSTMScratch(Module):
+    def __init__(self, num_inputs, num_hiddens, sigma=0.01):
+        super().__init__()
+
+        init_weight = lambda *shape: nn.Parameter(torch.randn(*shape) * sigma)
+        triple = lambda: (init_weight(num_inputs, num_hiddens),
+                          init_weight(num_hiddens, num_hiddens),
+                          nn.Parameter(torch.zeros(num_hiddens)))
+        self.W_xi, self.W_hi, self.b_i = triple()  # Input gate
+        self.W_xf, self.W_hf, self.b_f = triple()  # Forget gate
+        self.W_xo, self.W_ho, self.b_o = triple()  # Output gate
+        self.W_xc, self.W_hc, self.b_c = triple()  # Input node
+
+    def forward(self, inputs, H_C=None):
+        if H_C is None:
+            # Initial state with shape: (batch_size, num_hiddens)
+            H = torch.zeros((inputs.shape[1], self.num_hiddens),
+                          device=inputs.device)
+            C = torch.zeros((inputs.shape[1], self.num_hiddens),
+                          device=inputs.device)
+        else:
+            H, C = H_C
+        outputs = []
+        for X in inputs:
+            I = torch.sigmoid(torch.matmul(X, self.W_xi) +
+                            torch.matmul(H, self.W_hi) + self.b_i)
+            F = torch.sigmoid(torch.matmul(X, self.W_xf) +
+                            torch.matmul(H, self.W_hf) + self.b_f)
+            O = torch.sigmoid(torch.matmul(X, self.W_xo) +
+                            torch.matmul(H, self.W_ho) + self.b_o)
+            C_tilde = torch.tanh(torch.matmul(X, self.W_xc) +
+                              torch.matmul(H, self.W_hc) + self.b_c)
+            C = F * C + I * C_tilde
+            H = O * torch.tanh(C)
+            outputs.append(H)
+        return outputs, (H, C)
+```
+```
+```
+
+
+# GRU
+
+![gru-cell](/assets/images/deep_learning/rnn_gru_cell.png) {: .aligned-center}
+
+简化门控机制，提高计算性能，同时效果不差。
+
+
+- 重置门(reset gate) : 控制输入的隐状态使用多少用于生成候选隐状态
+- 更新门(update gate)： 控制新的隐状态保留老的隐状态多少信息, 候选隐状态使用多少信息
+
+
+$$
+\begin{aligned}
+\mathbf{R}_t = \sigma(\mathbf{X}_t \mathbf{W}_{\textrm{xr}} + \mathbf{H}_{t-1} \mathbf{W}_{\textrm{hr}} + \mathbf{b}_\textrm{r}),\\
+\mathbf{Z}_t = \sigma(\mathbf{X}_t \mathbf{W}_{\textrm{xz}} + \mathbf{H}_{t-1} \mathbf{W}_{\textrm{hz}} + \mathbf{b}_\textrm{z}),
+\end{aligned}
+$$
+
+
+计算候选隐状态
+
+
+$$\tilde{\mathbf{H}}_t = \tanh(\mathbf{X}_t \mathbf{W}_{\textrm{xh}} + \left(\mathbf{R}_t \odot \mathbf{H}_{t-1}\right) \mathbf{W}_{\textrm{hh}} + \mathbf{b}_\textrm{h}),$$
+
+计算隐状态
+
+$$\mathbf{H}_t = \mathbf{Z}_t \odot \mathbf{H}_{t-1}  + (1 - \mathbf{Z}_t) \odot \tilde{\mathbf{H}}_t.$$
+
+
+```python
+
+class GRUScratch(Module):
+    def __init__(self, num_inputs, num_hiddens, sigma=0.01):
+        super().__init__()
+
+        init_weight = lambda *shape: nn.Parameter(torch.randn(*shape) * sigma)
+        triple = lambda: (init_weight(num_inputs, num_hiddens),
+                          init_weight(num_hiddens, num_hiddens),
+                          nn.Parameter(torch.zeros(num_hiddens)))
+        self.W_xz, self.W_hz, self.b_z = triple()  # Update gate
+        self.W_xr, self.W_hr, self.b_r = triple()  # Reset gate
+        self.W_xh, self.W_hh, self.b_h = triple()  # Candidate hidden state
+
+    def forward(self, inputs, H=None):
+        if H is None:
+            # Initial state with shape: (batch_size, num_hiddens)
+            H = torch.zeros((inputs.shape[1], self.num_hiddens),
+                          device=inputs.device)
+        outputs = []
+        for X in inputs:
+            Z = torch.sigmoid(torch.matmul(X, self.W_xz) +
+                            torch.matmul(H, self.W_hz) + self.b_z)
+            R = torch.sigmoid(torch.matmul(X, self.W_xr) +
+                            torch.matmul(H, self.W_hr) + self.b_r)
+            H_tilde = torch.tanh(torch.matmul(X, self.W_xh) +
+                              torch.matmul(R * H, self.W_hh) + self.b_h)
+            H = Z * H + (1 - Z) * H_tilde
+            outputs.append(H)
+        return outputs, H
+
+```
