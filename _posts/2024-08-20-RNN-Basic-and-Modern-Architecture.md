@@ -414,7 +414,7 @@ class LSTMScratch(Module):
 
 # GRU
 
-![gru-cell](/assets/images/deep_learning/rnn_gru_cell.png) {: .aligned-center}
+![gru-cell](/assets/images/deep_learning/rnn_gru_cell.png){: .aligned-center}
 
 简化门控机制，提高计算性能，同时效果不差。
 
