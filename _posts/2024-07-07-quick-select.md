@@ -91,7 +91,7 @@ int partition(vector<int> &nums, int l, int r){
       if (i < j)
           swap(nums[i], nums[j]);
   }
-  // 循环结束时, j+1 == i, [l, j]之间的数**小于等于**pivot, [i,r]之间的数**大于等于**pivot
+  // 循环结束时, j == i, [l, j]之间的数**小于等于**pivot, [i,r]之间的数**大于等于**pivot
   return j;
 }
 // 第k小的元素
@@ -99,8 +99,18 @@ int quickSelect(vector<int>& a, int l, int r, int k){
     // 因为partition算法返回的不是pivot的index，因此需要遍历完数组，当只剩下一个元素时，就是第k小的元素
     if(l==r) return a[k];
     int q = partition(a, l, r);
-    if(k <= j) quickSelect(a, l, j, k);
-    else quickSelect(a, j+1, r, k);
+    if(k <= q) quickSelect(a, l, q, k);
+    else quickSelect(a, q+1, r, k);
+}
+
+int quickSelect(vector<int>& a, int l, int r, int index){
+    while(true) {
+        if(l==r) return a[index];
+        int q = partition(a, l, r);
+        // if(q == index) return a[q];
+        if (index <= q) r = q;
+        else l = q+1;
+    }
 }
 
 ```
